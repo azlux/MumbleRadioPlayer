@@ -1,0 +1,2 @@
+opuslib==1.1.0
+protobuf==2.6.1
