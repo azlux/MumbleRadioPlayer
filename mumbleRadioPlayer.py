@@ -12,7 +12,7 @@ import pymumble
 import subprocess as sp
 
 
-class MumblePlayUrlBot:
+class MumbleRadioPlayer:
     def __init__(self):
         signal.signal(signal.SIGINT, self.ctrl_caught)
 
@@ -82,7 +82,7 @@ class MumblePlayUrlBot:
             elif command == 'joinme':
                 self.mumble.users.myself.move_in(self.mumble.users[texte.actor]['channel_id'])
             elif command == 'v':
-                if parameter and parameter.replace('.', '', 1).isdigit() and parameter >= 0 and parameter <=1 :
+                if parameter and parameter.replace('.', '', 1).isdigit() and parameter >= 0 and parameter <= 1:
                     print("changement de volume")
                     self.volume = float(parameter)
 
@@ -186,4 +186,4 @@ def get_title(url):
 
 
 if __name__ == '__main__':
-    playbot = MumblePlayUrlBot()
+    playbot = MumbleRadioPlayer()

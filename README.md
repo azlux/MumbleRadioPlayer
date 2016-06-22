@@ -3,6 +3,9 @@ A Mumble bot that plays radio stream by URL
 
 ![Alt progression] (http://progressed.io/bar/90)
 ======
+Run the mumbleRadioPlayer.py to start the bot.
+it's in Python 2
+
 ####What the bot can do
 commands :
 - [x] !play
