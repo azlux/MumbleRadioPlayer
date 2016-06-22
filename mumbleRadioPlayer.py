@@ -21,7 +21,6 @@ class MumbleRadioPlayer:
 
         host = self.config.get('server', 'host')
         user = self.config.get('server', 'user')
-        user = " StreamPlayer"
         port = self.config.getint('server', 'port')
         password = self.config.get('server', 'password')
         debug = False
