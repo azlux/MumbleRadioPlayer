@@ -2,7 +2,7 @@
 A Mumble bot that plays radio stream by URL
 
 ![Alt progression] (http://progressed.io/bar/90)
-
+======
 ####What the bot can do
 commands :
 - [x] !play
@@ -16,6 +16,12 @@ commands :
 
 #### info
 The bot don't speak, it's not implemented into pymumble yet.
+So if a command don't work, try to find the error, or send me the command and i will try and telling you your error.
 
-#### TODO
+##### TODO
 - [ ] Make the bot speak into the channel
+
+=====
+### INFO
+Pymumble come from [here](https://github.com/azlux/pymumble) it's a fork a the actuel [fork alive](https://github.com/Xefir/pymumble) of pymumble, I will upload this fork and the pymumble directory every time a will make changes on pymumble directory on MumbleRadioPlayer.
+I done that because it's was too complicated to make a directory linked to the pymumble git.
