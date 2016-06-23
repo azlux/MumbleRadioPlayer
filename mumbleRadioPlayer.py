@@ -129,6 +129,7 @@ class MumbleRadioPlayer:
                 ffmpeg_debug = "warning"
             command = ["ffmpeg", '-v', ffmpeg_debug, '-nostdin', '-i', url, '-ac', '1', '-f', 's16le', '-ar', '48000', '-']
             print(command)
+            self.thread = sp.Popen(command, stdout=sp.PIPE, bufsize=480)
             self.set_comment("Stream from %s" % info)
             time.sleep(3)
             self.playing = True
