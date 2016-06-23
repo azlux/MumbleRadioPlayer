@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 import time
 import sys
 import signal
@@ -7,52 +8,57 @@ import urllib2
 import json
 import re
 import audioop
-
-import pymumble
+import os
 import subprocess as sp
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "pymumble"))
+import pymumble
 
 
 class MumbleRadioPlayer:
-    def __init__(self):
+    def __init__(self, sys_args):
         signal.signal(signal.SIGINT, self.ctrl_caught)
 
-        self.config = ConfigParser.SafeConfigParser({'password': ''}, allow_no_value=True)
+        self.config = ConfigParser.ConfigParser()
         self.config.read("configuration.ini")
 
-        host = self.config.get('server', 'host')
-        user = self.config.get('server', 'user')
-        port = self.config.getint('server', 'port')
-        password = self.config.get('server', 'password')
-        debug = False
+        host = get_args('-server', sys_args)
+        user = get_args('-user', sys_args, default="StreamPlayerBot")
+        port = int(get_args('-port', sys_args, default=64738))
+        password = get_args('-password', sys_args, default="")
 
-        self.channel = self.config.get('server', 'channel')
+        self.channel = get_args('-channel', sys_args, default="")
         self.volume = self.config.getfloat('bot', 'volume')
 
         self.playing = False
         self.exit = False
         self.nbexit = 0
-        self.mumble = pymumble.Mumble(host, user=user, port=port, password=password, debug=debug)
+        self.thread = None
+
+        self.mumble = pymumble.Mumble(host, user=user, port=port, password=password,
+                                      debug=self.config.getboolean('debug', 'mumbleConnection'))
         self.mumble.callbacks.set_callback("text_received", self.message_received)
 
         self.mumble.start()  # start the mumble thread
         self.mumble.is_ready()  # wait for the connection
         self.set_comment()
         self.mumble.users.myself.unmute()  # by sure the user is not muted
-        self.mumble.channels.find_by_name(self.channel).move_in()
+        if self.channel:
+            self.mumble.channels.find_by_name(self.channel).move_in()
         self.mumble.set_bandwidth(200000)
-        self.thread = None
         self.loop()
 
     def ctrl_caught(self, signal, frame):
         print("\ndeconnection asked")
         self.exit = True
+        self.stop()
         if self.nbexit > 2:
             print("Forced Quit")
             sys.exit(0)
         self.nbexit += 1
 
-    def message_received(self, texte):
-        message = texte.message
+    def message_received(self, text):
+        message = text.message
         if message[0] == '!':
             message = message[1:].split(' ', 1)
 
@@ -72,47 +78,69 @@ class MumbleRadioPlayer:
                 self.stop()
 
             elif command == 'kill':
-                self.exit = True
+                if self.is_admin(text.actor):
+                    self.stop()
+                    self.exit = True
+                else:
+                    print("You are not an admin")
 
             elif command == 'oust':
                 self.stop()
-                self.mumble.channels.find_by_name(self.channel).move_in()
+                if self.channel:
+                    self.mumble.channels.find_by_name(self.channel).move_in()
 
             elif command == 'joinme':
-                self.mumble.users.myself.move_in(self.mumble.users[texte.actor]['channel_id'])
+                self.mumble.users.myself.move_in(self.mumble.users[text.actor]['channel_id'])
+
             elif command == 'v':
-                if parameter and parameter.replace('.', '', 1).isdigit() and parameter >= 0 and parameter <= 1:
+                if parameter != None and parameter.replace('.', '', 1).isdigit() and float(parameter) >= 0.0 and float(parameter) <= 1.0:
                     print("changement de volume")
                     self.volume = float(parameter)
+            else:
+                print("Bad command")
+
+    def is_admin(self, user):
+        # this lonnng conversion because in python2 configparser don't accept unicode
+        # so i remove unicode caracter of the username
+        username = self.mumble.users[user]['name'].encode('ascii', errors='ignore').strip()
+        list_admin = self.config.get('bot', 'admin').split(';')
+        if username in list_admin:
+            return True
+        else:
+            return False
 
     def play(self, msg):
         if self.config.has_option('stream', msg):
             url = self.config.get('stream', msg)
             self.launch_play(url)
-        elif get_url(msg):
+        elif self.config.getboolean('bot', 'allow_new_url') and get_url(msg):
             self.launch_play(get_url(msg))
         else:
-            print("Bad URL")
+            print("Bad input")
 
     def launch_play(self, url):
-        self.stop()
+        info = get_server_description(url)
+        if info != False:
+            self.stop()
 
-        time.sleep(2)
-
-        command = ["ffmpeg", '-v', 'warning', '-nostdin', '-i', url, '-ac', '1', '-f', 's16le', '-ar', '48000', '-']
-        print(command)
-        self.thread = sp.Popen(command, stdout=sp.PIPE, bufsize=480)
-        self.set_comment("Stream from %s" % get_server_description(url))
-        time.sleep(3)
-        self.playing = True
+            time.sleep(2)
+            if self.config.getboolean('debug', 'ffmpeg'):
+                ffmpeg_debug = "debug"
+            else:
+                ffmpeg_debug = "warning"
+            command = ["ffmpeg", '-v', ffmpeg_debug, '-nostdin', '-i', url, '-ac', '1', '-f', 's16le', '-ar', '48000', '-']
+            print(command)
+            self.thread = sp.Popen(command, stdout=sp.PIPE, bufsize=1024)
+            self.set_comment("Stream from %s" % info)
+            time.sleep(3)
+            self.playing = True
 
     def loop(self):
         while not self.exit:
             if self.playing:
-                while self.mumble.sound_output.get_buffer_size() > 0.5:
+                while self.mumble.sound_output.get_buffer_size() > 0.5 and self.playing:
                     time.sleep(0.01)
-
-                self.mumble.sound_output.add_sound(audioop.mul(self.thread.stdout.read(480), 2, self.volume))
+                self.mumble.sound_output.add_sound(audioop.mul(self.thread.stdout.read(1024), 2, self.volume))
             else:
                 time.sleep(1)
 
@@ -122,15 +150,16 @@ class MumbleRadioPlayer:
 
     def stop(self):
         if self.thread:
-            self.thread.kill()
             self.playing = False
+            time.sleep(0.5)
+            self.thread.kill()
+            self.thread = None
             print("Stop")
 
     def set_comment(self, txt=None):
         if txt is None:
             txt = ""
-        self.config.get('server', 'comment')
-        self.mumble.users.myself.comment(txt + "<p /> " + self.config.get('server', 'comment'))
+        self.mumble.users.myself.comment(txt + "<p /> " + self.config.get('bot', 'comment'))
 
 
 def get_url(url):
@@ -150,8 +179,8 @@ def get_server_description(url):
     base_url = res.group(1)
     url_icecast = base_url + '/status-json.xsl'
     url_shoutcast = base_url + '/stats?json=1'
-    request = urllib2.Request(url_icecast)
     try:
+        request = urllib2.Request(url_icecast)
         response = urllib2.urlopen(request)
         data = json.loads(response.read())
         title_server = data['icestats']['source'][0]['server_name'] + ' - ' + data['icestats']['source'][0][
@@ -163,8 +192,10 @@ def get_server_description(url):
             title_server = data['servertitle']
             if not title_server:
                 title_server = url
-    except:
+    except (urllib2.Request, urllib2.urlopen):
         title_server = url
+    except urllib2.HTTPError:
+        return False
     return title_server
 
 
@@ -180,9 +211,26 @@ def get_title(url):
             content = response.read(read_buffer)
             title = content[metaint:].split("'")
             print(title)
-    except:
+    except (urllib2.Request, urllib2.urlopen):
         print('Error')
 
 
+def get_args(name, sys_args, default=None):
+    if name in sys_args:
+        try:
+            res = str(sys_args[sys_args.index(name) + 1])
+            return str(res)
+        except IndexError:
+            print("option of " + name + " is missing !")
+            sys.exit(1)
+
+    elif default != None:
+        return default
+
+    else:
+        print("parameter " + name + " is missing !")
+        sys.exit(1)
+
+
 if __name__ == '__main__':
-    playbot = MumbleRadioPlayer()
+    playbot = MumbleRadioPlayer(sys.argv[1::])
