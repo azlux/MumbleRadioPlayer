@@ -15,12 +15,15 @@ commands :
 - [x] !joinme (join the user who speak to me)
 - [x] !kill
 - [x] !oust (stop + go into the default channel)
-- [x] !v <number> (change volume with a float number between 0 and 1)
+- [x] !v <number> (change volume with a percentage )
 
 #### info
 The bot can't speak as this is not implemented into pymumble yet.  
 If a command doesn't work, try to find the error, or send me the command and I will try to reproduce it.
 
+The bot change is own comment with the stream name. Now working with :
+- SouthCast
+- IceCast
 ##### TODO
 - [ ] Make the bot speak in the channel
 

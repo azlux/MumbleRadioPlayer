@@ -14,6 +14,7 @@ import subprocess as sp
 sys.path.append(os.path.join(os.path.dirname(__file__), "pymumble"))
 import pymumble
 
+
 class MumbleRadioPlayer:
     def __init__(self, sys_args):
         signal.signal(signal.SIGINT, self.ctrl_caught)
@@ -49,8 +50,8 @@ class MumbleRadioPlayer:
 
     def ctrl_caught(self, signal, frame):
         print("\ndeconnection asked")
-        self.exit = True
         self.stop()
+        self.exit = True
         if self.nbexit > 2:
             print("Forced Quit")
             sys.exit(0)
@@ -92,10 +93,11 @@ class MumbleRadioPlayer:
                 self.mumble.users.myself.move_in(self.mumble.users[text.actor]['channel_id'])
 
             elif command == 'v':
-                if parameter != None and parameter.replace('.', '', 1).isdigit() and float(parameter) >= 0.0 and float(parameter) <= 1.0:
-                    print("changement de volume")
-                    self.volume = float(parameter)
-            else:
+                if parameter != None and parameter.isdigit() and int(parameter) >= 0 and int(parameter) <= 100:
+                    self.volume = float(float(parameter) / 100)
+                    print("changement de volume a " + str(self.volume))
+
+        else:
                 print("Bad command")
 
     def is_admin(self, user):
@@ -178,23 +180,27 @@ def get_server_description(url):
     base_url = res.group(1)
     url_icecast = base_url + '/status-json.xsl'
     url_shoutcast = base_url + '/stats?json=1'
+    title_server = None
     try:
-        request = urllib2.Request(url_icecast)
+        request = urllib2.Request(url_shoutcast)
         response = urllib2.urlopen(request)
         data = json.loads(response.read())
-        title_server = data['icestats']['source'][0]['server_name'] + ' - ' + data['icestats']['source'][0][
-            'server_description']
-        if not title_server:
-            request = urllib2.Request(url_shoutcast)
+        title_server = data['servertitle']
+    except urllib2.HTTPError:
+        pass
+
+    if not title_server:
+        try:
+            request = urllib2.Request(url_icecast)
             response = urllib2.urlopen(request)
             data = json.loads(response.read())
-            title_server = data['servertitle']
+            title_server = data['icestats']['source'][0]['server_name'] + ' - ' + data['icestats']['source'][0]['server_description']
             if not title_server:
                 title_server = url
-    except (urllib2.Request, urllib2.urlopen):
-        title_server = url
-    except urllib2.HTTPError:
-        return False
+        except (urllib2.Request, urllib2.urlopen):
+            title_server = url
+        except urllib2.HTTPError:
+            return False
     return title_server
 
 
