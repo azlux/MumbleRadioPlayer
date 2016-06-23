@@ -14,7 +14,6 @@ import subprocess as sp
 sys.path.append(os.path.join(os.path.dirname(__file__), "pymumble"))
 import pymumble
 
-
 class MumbleRadioPlayer:
     def __init__(self, sys_args):
         signal.signal(signal.SIGINT, self.ctrl_caught)
@@ -130,7 +129,6 @@ class MumbleRadioPlayer:
                 ffmpeg_debug = "warning"
             command = ["ffmpeg", '-v', ffmpeg_debug, '-nostdin', '-i', url, '-ac', '1', '-f', 's16le', '-ar', '48000', '-']
             print(command)
-            self.thread = sp.Popen(command, stdout=sp.PIPE, bufsize=1024)
             self.set_comment("Stream from %s" % info)
             time.sleep(3)
             self.playing = True
@@ -140,7 +138,7 @@ class MumbleRadioPlayer:
             if self.playing:
                 while self.mumble.sound_output.get_buffer_size() > 0.5 and self.playing:
                     time.sleep(0.01)
-                self.mumble.sound_output.add_sound(audioop.mul(self.thread.stdout.read(1024), 2, self.volume))
+                self.mumble.sound_output.add_sound(audioop.mul(self.thread.stdout.read(480), 2, self.volume))
             else:
                 time.sleep(1)
 
