@@ -31,6 +31,7 @@ class MumbleRadioPlayer:
         self.volume = self.config.getfloat('bot', 'volume')
 
         self.playing = False
+        self.url = None
         self.exit = False
         self.nbexit = 0
         self.thread = None
@@ -82,7 +83,7 @@ class MumbleRadioPlayer:
                     self.stop()
                     self.exit = True
                 else:
-                    print("You are not an admin")
+                    self.mumble.users[text.actor].send_message("You are not an admin")
 
             elif command == 'oust':
                 self.stop()
@@ -95,10 +96,11 @@ class MumbleRadioPlayer:
             elif command == 'v':
                 if parameter != None and parameter.isdigit() and int(parameter) >= 0 and int(parameter) <= 100:
                     self.volume = float(float(parameter) / 100)
-                    print("changement de volume a " + str(self.volume))
-
-        else:
-                print("Bad command")
+                    self.send_msg_channel("changement de volume a %s par %s" % (str(self.volume), self.mumble.users[text.actor]['name']))
+            elif command == "np":
+                self.send_msg_channel(get_title(self.url))
+            else:
+                self.mumble.users[text.actor].send_message("Commande incorrecte")
 
     def is_admin(self, user):
         # this lonnng conversion because in python2 configparser don't accept unicode
@@ -130,7 +132,7 @@ class MumbleRadioPlayer:
             else:
                 ffmpeg_debug = "warning"
             command = ["ffmpeg", '-v', ffmpeg_debug, '-nostdin', '-i', url, '-ac', '1', '-f', 's16le', '-ar', '48000', '-']
-            print(command)
+            self.url = url
             self.thread = sp.Popen(command, stdout=sp.PIPE, bufsize=480)
             self.set_comment("Stream from %s" % info)
             time.sleep(3)
@@ -155,12 +157,18 @@ class MumbleRadioPlayer:
             time.sleep(0.5)
             self.thread.kill()
             self.thread = None
-            print("Stop")
+            self.url = None
+            print("Stoped")
 
     def set_comment(self, txt=None):
         if txt is None:
             txt = ""
         self.mumble.users.myself.comment(txt + "<p /> " + self.config.get('bot', 'comment'))
+
+    def send_msg_channel(self, msg, channel=None):
+        if not channel:
+            channel = self.mumble.channels[self.mumble.users.myself['channel_id']]
+        channel.send_text_message(msg)
 
 
 def get_url(url):
@@ -215,9 +223,10 @@ def get_title(url):
             read_buffer = metaint + 255
             content = response.read(read_buffer)
             title = content[metaint:].split("'")
-            print(title)
+            return title[1]
     except (urllib2.Request, urllib2.urlopen):
-        print('Error')
+        pass
+    return 'Impossible to get the music title'
 
 
 def get_args(name, sys_args, default=None):

@@ -28,14 +28,15 @@ Optional parameters :
 It's in Python 2
 
 #### Commands
-- [x] !play
-   - [x] from a list of url (name you have add into the configuration file)
-   - [x] with a url
-- [x] !stop
-- [x] !joinme (join the user who speak to me)
-- [x] !kill
-- [x] !oust (stop + go into the default channel)
-- [x] !v <number> (change volume with a percentage )
+- !play
+   - from a list of url (name you have add into the configuration file)
+   - with a url
+- !stop
+- !joinme (join the user who speak to me)
+- !kill
+- !oust (stop + go into the default channel)
+- !v <number> (change volume with a percentage )
+- !np (get the current music title - now playing feature)
 
 #### Installation
 1. You need python 2 with opuslib and protobuf (look at the requirement of pymumble)
@@ -57,8 +58,7 @@ If you really want to install pymumble independently, there are a install.sh. Bu
 #### Important
 What the bot cannot do:
 
-1. The bot can't send messages as this is not implemented into pymumble yet.
-2. A .pls file is **NOT** a stream url, it's just a text file. Take a look inside if you can found real stream url. A good url can be read by your browser natively.
+1. A .pls file is **NOT** a stream url, it's just a text file. Take a look inside if you can found real stream url. A good url can be read by your browser natively.
 
 #### How to help
 Because, Yes, You can help.
@@ -75,7 +75,7 @@ The bot change is own comment with the stream name. Now working with:
 - IceCast
 
 #### TODO
-- [ ] Make the bot speak in the channel
+- [x] Make the bot speak in the channel
 - [ ] Option to use a certificate
 
 =====
