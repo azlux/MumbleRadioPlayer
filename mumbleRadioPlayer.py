@@ -94,7 +94,7 @@ class MumbleRadioPlayer:
                 self.mumble.users.myself.move_in(self.mumble.users[text.actor]['channel_id'])
 
             elif command == 'v':
-                if parameter != None and parameter.isdigit() and int(parameter) >= 0 and int(parameter) <= 100:
+                if parameter is not None and parameter.isdigit() and int(parameter) >= 0 and int(parameter) <= 100:
                     self.volume = float(float(parameter) / 100)
                     self.send_msg_channel("changement de volume a %s par %s" % (str(self.volume), self.mumble.users[text.actor]['name']))
             elif command == "np":
@@ -205,7 +205,7 @@ def get_server_description(url):
             title_server = data['icestats']['source'][0]['server_name'] + ' - ' + data['icestats']['source'][0]['server_description']
             if not title_server:
                 title_server = url
-        except (urllib2.Request, urllib2.urlopen):
+        except urllib2.URLError:
             title_server = url
         except urllib2.HTTPError:
             return False
@@ -224,7 +224,7 @@ def get_title(url):
             content = response.read(read_buffer)
             title = content[metaint:].split("'")
             return title[1]
-    except (urllib2.Request, urllib2.urlopen):
+    except urllib2.URLError:
         pass
     return 'Impossible to get the music title'
 
@@ -238,7 +238,7 @@ def get_args(name, sys_args, default=None):
             print("option of " + name + " is missing !")
             sys.exit(1)
 
-    elif default != None:
+    elif default is not None:
         return default
 
     else:
