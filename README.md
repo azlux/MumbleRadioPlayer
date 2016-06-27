@@ -61,6 +61,7 @@ What the bot cannot do:
 
 1. A .pls file is **NOT** a stream url, it's just a text file. Take a look inside if you can found real stream url. A good url can be read by your browser natively.
 2. The configuration file is **NOT** UTF-8 encoded, be careful
+
 #### How to help
 Because, Yes, You can help.
 - If you find bugs, problems, errors, mistakes, you can create an issue on github.
