@@ -196,6 +196,8 @@ def get_server_description(url):
         title_server = data['servertitle']
     except urllib2.HTTPError:
         pass
+    except urllib2.ValueError:
+        return False
 
     if not title_server:
         try:
@@ -224,7 +226,7 @@ def get_title(url):
             content = response.read(read_buffer)
             title = content[metaint:].split("'")
             return title[1]
-    except urllib2.URLError:
+    except (urllib2.URLError, urllib2.HTTPError, urllib2.ValueError):
         pass
     return 'Impossible to get the music title'
 
