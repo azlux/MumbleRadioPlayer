@@ -100,8 +100,10 @@ class MumbleRadioPlayer:
                     self.send_msg_channel(self.config.get('strings', 'current_volume') % int(self.volume * 100))
 
             elif command == self.config.get('command', 'current_music'):
-                self.send_msg_channel(get_title(self.url))
-
+                if self.url is not None:
+                    self.send_msg_channel(get_title(self.url))
+                else:
+                    self.mumble.users[text.actor].send_message(self.config.get('strings', 'not_playing'))
             else:
                 self.mumble.users[text.actor].send_message(self.config.get('strings', 'bad_command'))
 
