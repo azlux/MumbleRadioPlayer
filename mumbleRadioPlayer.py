@@ -51,8 +51,8 @@ class MumbleRadioPlayer:
 
     def ctrl_caught(self, signal, frame):
         print("\ndeconnection asked")
-        self.stop()
         self.exit = True
+        self.stop()
         if self.nbexit > 2:
             print("Forced Quit")
             sys.exit(0)
@@ -62,7 +62,6 @@ class MumbleRadioPlayer:
         message = text.message
         if message[0] == '!':
             message = message[1:].split(' ', 1)
-
             if len(message) > 0:
                 command = message[0]
                 parameter = ''
@@ -72,35 +71,39 @@ class MumbleRadioPlayer:
                 return
 
             print(command + ' - ' + parameter)
-            if command == 'play' and parameter:
+            if command == self.config.get('command', 'play') and parameter:
                 self.play(parameter)
 
-            elif command == 'stop':
+            elif command == self.config.get('command', 'stop'):
                 self.stop()
 
-            elif command == 'kill':
+            elif command == self.config.get('command', 'kill'):
                 if self.is_admin(text.actor):
                     self.stop()
                     self.exit = True
                 else:
-                    self.mumble.users[text.actor].send_message("You are not an admin")
+                    self.mumble.users[text.actor].send_message(self.config.get('strings', 'not_admin'))
 
-            elif command == 'oust':
+            elif command == self.config.get('command', 'stop_and_getout'):
                 self.stop()
                 if self.channel:
                     self.mumble.channels.find_by_name(self.channel).move_in()
 
-            elif command == 'joinme':
+            elif command == self.config.get('command', 'joinme'):
                 self.mumble.users.myself.move_in(self.mumble.users[text.actor]['channel_id'])
 
-            elif command == 'v':
+            elif command == self.config.get('command', 'volume'):
                 if parameter is not None and parameter.isdigit() and int(parameter) >= 0 and int(parameter) <= 100:
                     self.volume = float(float(parameter) / 100)
-                    self.send_msg_channel("changement de volume a %s par %s" % (str(self.volume), self.mumble.users[text.actor]['name']))
-            elif command == "np":
+                    self.send_msg_channel(self.config.get('strings', 'change_volume') % (int(self.volume * 100), self.mumble.users[text.actor]['name']))
+                else:
+                    self.send_msg_channel(self.config.get('strings', 'current_volume') % int(self.volume * 100))
+
+            elif command == self.config.get('command', 'current_music'):
                 self.send_msg_channel(get_title(self.url))
+
             else:
-                self.mumble.users[text.actor].send_message("Commande incorrecte")
+                self.mumble.users[text.actor].send_message(self.config.get('strings', 'bad_command'))
 
     def is_admin(self, user):
         # this lonnng conversion because in python2 configparser don't accept unicode
@@ -158,7 +161,6 @@ class MumbleRadioPlayer:
             self.thread.kill()
             self.thread = None
             self.url = None
-            print("Stoped")
 
     def set_comment(self, txt=None):
         if txt is None:
