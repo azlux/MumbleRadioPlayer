@@ -48,7 +48,7 @@ commands (don't forget the sudo mode):
 pip install opuslib
 pip install protobuf
 apt-get install ffmpeg
-git clone https://github.com/azlux/MumbleRadioPlayer.git
+git clone --recurse-submodules https://github.com/azlux/MumbleRadioPlayer.git
 cd ./MumbleRadioPlayer
 chmod +x ./mumbleRadioPlayer.py
 ```
