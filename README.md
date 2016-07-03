@@ -82,4 +82,4 @@ The bot change is own comment with the stream name. Now working with:
 
 =====
 ### Credits
-Pymumble comes from [here](https://github.com/azlux/pymumble), it's a fork of [Xefir's fork](https://github.com/Xefir/pymumble), It's, for now, the current fork alive of pymumble
+Pymumble comes from [here](https://github.com/azlux/pymumble). It's, for now, the current fork alive of pymumble
