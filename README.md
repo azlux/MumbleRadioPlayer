@@ -25,7 +25,7 @@ Optional parameters :
 -password <password>
 `
 
-It's in Python 2
+It's in Python 3 (maybe it's working for python2, too. No tested!)
 
 #### Commands
 You can change commands into the configuration file, The default is :
@@ -40,7 +40,8 @@ You can change commands into the configuration file, The default is :
 - !np (get the current music title - now playing feature)
 
 #### Installation
-1. You need python 2 with opuslib and protobuf (look at the requirement of pymumble)
+1. You need python 3 with opuslib and protobuf (look at the requirement of pymumble)
+   (Hint pyenv is a good start to get the requirements, search pyenv-installer)
 2. The Bot use ffmpeg, so you know what you have to do if ffmpeg aren't in your package manager. I personally use [this repository](http://repozytorium.mati75.eu/) on my raspberry.
 
 commands (don't forget the sudo mode):
