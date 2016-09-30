@@ -3,8 +3,8 @@
 import time
 import sys
 import signal
-import ConfigParser
-import urllib2
+import configparser
+import urllib.request, urllib.error, urllib.parse
 import json
 import re
 import audioop
@@ -19,7 +19,7 @@ class MumbleRadioPlayer:
     def __init__(self, sys_args):
         signal.signal(signal.SIGINT, self.ctrl_caught)
 
-        self.config = ConfigParser.ConfigParser()
+        self.config = configparser.ConfigParser()
         self.config.read("configuration.ini")
 
         host = get_args('-server', sys_args)
@@ -70,7 +70,7 @@ class MumbleRadioPlayer:
             else:
                 return
 
-            print(command + ' - ' + parameter)
+            print((command + ' - ' + parameter))
             if command == self.config.get('command', 'play') and parameter:
                 self.play(parameter)
 
@@ -194,43 +194,43 @@ def get_server_description(url):
     url_shoutcast = base_url + '/stats?json=1'
     title_server = None
     try:
-        request = urllib2.Request(url_shoutcast)
-        response = urllib2.urlopen(request)
-        data = json.loads(response.read())
+        request = urllib.request.Request(url_shoutcast)
+        response = urllib.request.urlopen(request)
+        data = json.loads(response.read().decode("utf-8"))
         title_server = data['servertitle']
-    except urllib2.HTTPError:
+    except urllib.error.HTTPError:
         pass
-    except urllib2.ValueError:
+    except ValueError:
         return False
 
     if not title_server:
         try:
-            request = urllib2.Request(url_icecast)
-            response = urllib2.urlopen(request)
-            data = json.loads(response.read())
+            request = urllib.request.Request(url_icecast)
+            response = urllib.request.urlopen(request)
+            data = json.loads(response.read().decode("utf-8"))
             title_server = data['icestats']['source'][0]['server_name'] + ' - ' + data['icestats']['source'][0]['server_description']
             if not title_server:
                 title_server = url
-        except urllib2.URLError:
+        except urllib.error.URLError:
             title_server = url
-        except urllib2.HTTPError:
+        except urllib.error.HTTPError:
             return False
     return title_server
 
 
 def get_title(url):
-    request = urllib2.Request(url)
+    request = urllib.request.Request(url)
     try:
         request.add_header('Icy-MetaData', 1)
-        response = urllib2.urlopen(request)
+        response = urllib.request.urlopen(request)
         icy_metaint_header = response.headers.get('icy-metaint')
         if icy_metaint_header is not None:
             metaint = int(icy_metaint_header)
             read_buffer = metaint + 255
-            content = response.read(read_buffer)
+            content = response.read(read_buffer).decode("utf-8")
             title = content[metaint:].split("'")
             return title[1]
-    except (urllib2.URLError, urllib2.HTTPError, urllib2.ValueError):
+    except (urllib.error.URLError, urllib.error.HTTPError, ValueError):
         pass
     return 'Impossible to get the music title'
 
@@ -241,14 +241,14 @@ def get_args(name, sys_args, default=None):
             res = str(sys_args[sys_args.index(name) + 1])
             return str(res)
         except IndexError:
-            print("option of " + name + " is missing !")
+            print(("option of " + name + " is missing !"))
             sys.exit(1)
 
     elif default is not None:
         return default
 
     else:
-        print("parameter " + name + " is missing !")
+        print(("parameter " + name + " is missing !"))
         sys.exit(1)
 
 
