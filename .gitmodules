@@ -1,0 +1,4 @@
+[submodule "pymumble"]
+	path = pymumble
+	url = https://github.com/azlux/pymumble.git
+	branch = pymumble_py3
