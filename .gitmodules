@@ -1,6 +1,3 @@
-[submodule "pymumble"]
-	path = pymumble
-	url = https://github.com/azlux/pymumble.git
 [submodule "branch"]
 	path = branch
 	url = https://github.com/azlux/pymumble.git
