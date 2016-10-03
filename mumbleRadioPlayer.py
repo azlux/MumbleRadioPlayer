@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+import struct
 
 import time
 import sys
@@ -8,35 +9,35 @@ import urllib.request, urllib.error, urllib.parse
 import json
 import re
 import audioop
-import os
 import subprocess as sp
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "pymumble"))
-import pymumble
+import pymumble.pymumble_py3k as pymumble
+import argparse
 
 
 class MumbleRadioPlayer:
-    def __init__(self, sys_args):
+    def __init__(self):
         signal.signal(signal.SIGINT, self.ctrl_caught)
 
-        self.config = configparser.ConfigParser()
+        self.config = configparser.ConfigParser(interpolation=None)
         self.config.read("configuration.ini")
 
-        host = get_args('-server', sys_args)
-        user = get_args('-user', sys_args, default="StreamPlayerBot")
-        port = int(get_args('-port', sys_args, default=64738))
-        password = get_args('-password', sys_args, default="")
+        parser = argparse.ArgumentParser(description='Bot for playing radio stream on Mumble')
+        parser.add_argument("-s", "--server", dest="host", type=str, required=True, help="The server's hostame of a mumble server")
+        parser.add_argument("-u", "--user", dest="user", type=str, required=True, help="Username you wish, Default=abot")
+        parser.add_argument("-P", "--password", dest="password", type=str, default="", help="Password if server requires one")
+        parser.add_argument("-p", "--port", dest="port", type=int, default=64738, help="Port for the mumble server")
+        parser.add_argument("-c", "--channel", dest="channel", type=str, default="", help="Default chanel for the bot")
 
-        self.channel = get_args('-channel', sys_args, default="")
+        args = parser.parse_args()
         self.volume = self.config.getfloat('bot', 'volume')
-
+        self.channel = args.channel
         self.playing = False
         self.url = None
         self.exit = False
-        self.nbexit = 0
+        self.nb_exit = 0
         self.thread = None
 
-        self.mumble = pymumble.Mumble(host, user=user, port=port, password=password,
+        self.mumble = pymumble.Mumble(args.host, user=args.user, port=args.port, password=args.password,
                                       debug=self.config.getboolean('debug', 'mumbleConnection'))
         self.mumble.callbacks.set_callback("text_received", self.message_received)
 
@@ -53,10 +54,10 @@ class MumbleRadioPlayer:
         print("\ndeconnection asked")
         self.exit = True
         self.stop()
-        if self.nbexit > 2:
+        if self.nb_exit > 2:
             print("Forced Quit")
             sys.exit(0)
-        self.nbexit += 1
+        self.nb_exit += 1
 
     def message_received(self, text):
         message = text.message
@@ -70,7 +71,7 @@ class MumbleRadioPlayer:
             else:
                 return
 
-            print((command + ' - ' + parameter))
+            print(command + ' - ' + parameter + ' by ' + self.mumble.users[text.actor]['name'])
             if command == self.config.get('command', 'play') and parameter:
                 self.play(parameter)
 
@@ -93,9 +94,10 @@ class MumbleRadioPlayer:
                 self.mumble.users.myself.move_in(self.mumble.users[text.actor]['channel_id'])
 
             elif command == self.config.get('command', 'volume'):
-                if parameter is not None and parameter.isdigit() and int(parameter) >= 0 and int(parameter) <= 100:
+                if parameter is not None and parameter.isdigit() and 0 <= int(parameter) <= 100:
                     self.volume = float(float(parameter) / 100)
-                    self.send_msg_channel(self.config.get('strings', 'change_volume') % (int(self.volume * 100), self.mumble.users[text.actor]['name']))
+                    self.send_msg_channel(self.config.get('strings', 'change_volume') % (
+                        int(self.volume * 100), self.mumble.users[text.actor]['name']))
                 else:
                     self.send_msg_channel(self.config.get('strings', 'current_volume') % int(self.volume * 100))
 
@@ -108,9 +110,7 @@ class MumbleRadioPlayer:
                 self.mumble.users[text.actor].send_message(self.config.get('strings', 'bad_command'))
 
     def is_admin(self, user):
-        # this lonnng conversion because in python2 configparser don't accept unicode
-        # so i remove unicode caracter of the username
-        username = self.mumble.users[user]['name'].encode('ascii', errors='ignore').strip()
+        username = self.mumble.users[user]['name']
         list_admin = self.config.get('bot', 'admin').split(';')
         if username in list_admin:
             return True
@@ -219,38 +219,25 @@ def get_server_description(url):
 
 
 def get_title(url):
-    request = urllib.request.Request(url)
+    request = urllib.request.Request(url, headers={'Icy-MetaData': 1})
     try:
-        request.add_header('Icy-MetaData', 1)
         response = urllib.request.urlopen(request)
-        icy_metaint_header = response.headers.get('icy-metaint')
+        icy_metaint_header = int(response.headers['icy-metaint'])
         if icy_metaint_header is not None:
-            metaint = int(icy_metaint_header)
-            read_buffer = metaint + 255
-            content = response.read(read_buffer).decode("utf-8")
-            title = content[metaint:].split("'")
-            return title[1]
-    except (urllib.error.URLError, urllib.error.HTTPError, ValueError):
+            response.read(icy_metaint_header)
+            metadata_length = struct.unpack('B', response.read(1))[0] * 16  # length byte
+            metadata = response.read(metadata_length).rstrip(b'\0')
+            print(metadata, file=sys.stderr)
+            # extract title from the metadata
+            m = re.search(br"StreamTitle='([^']*)';", metadata)
+            if m:
+                title = m.group(1)
+                if title:
+                    return title
+    except (urllib.error.URLError, urllib.error.HTTPError):
         pass
     return 'Impossible to get the music title'
 
 
-def get_args(name, sys_args, default=None):
-    if name in sys_args:
-        try:
-            res = str(sys_args[sys_args.index(name) + 1])
-            return str(res)
-        except IndexError:
-            print(("option of " + name + " is missing !"))
-            sys.exit(1)
-
-    elif default is not None:
-        return default
-
-    else:
-        print(("parameter " + name + " is missing !"))
-        sys.exit(1)
-
-
 if __name__ == '__main__':
-    playbot = MumbleRadioPlayer(sys.argv[1::])
+    playbot = MumbleRadioPlayer()
