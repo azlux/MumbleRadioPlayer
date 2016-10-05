@@ -41,6 +41,7 @@ class MumbleRadioPlayer:
                                       debug=self.config.getboolean('debug', 'mumbleConnection'))
         self.mumble.callbacks.set_callback("text_received", self.message_received)
 
+        self.mumble.set_codec_profile("audio")
         self.mumble.start()  # start the mumble thread
         self.mumble.is_ready()  # wait for the connection
         self.set_comment()
@@ -229,7 +230,7 @@ def get_title(url):
             metadata = response.read(metadata_length).rstrip(b'\0')
             print(metadata, file=sys.stderr)
             # extract title from the metadata
-            m = re.search(br"StreamTitle='([^']*)';", metadata)
+            m = re.search(br"StreamTitle='(.*)';", metadata)
             if m:
                 title = m.group(1)
                 if title:
