@@ -10,7 +10,7 @@ import json
 import re
 import audioop
 import subprocess as sp
-import pymumble.pymumble_py3k as pymumble
+import pymumble.pymumble_py3 as pymumble
 import argparse
 import os.path
 
