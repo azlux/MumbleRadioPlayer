@@ -12,6 +12,7 @@ import audioop
 import subprocess as sp
 import pymumble.pymumble_py3k as pymumble
 import argparse
+import os.path
 
 
 class MumbleRadioPlayer:
@@ -40,7 +41,7 @@ class MumbleRadioPlayer:
         self.mumble = pymumble.Mumble(args.host, user=args.user, port=args.port, password=args.password,
                                       debug=self.config.getboolean('debug', 'mumbleConnection'))
         self.mumble.callbacks.set_callback("text_received", self.message_received)
-
+        
         self.mumble.set_codec_profile("audio")
         self.mumble.start()  # start the mumble thread
         self.mumble.is_ready()  # wait for the connection
@@ -73,8 +74,15 @@ class MumbleRadioPlayer:
                 return
 
             print(command + ' - ' + parameter + ' by ' + self.mumble.users[text.actor]['name'])
-            if command == self.config.get('command', 'play') and parameter:
-                self.play(parameter)
+            if command == self.config.get('command', 'play_stream') and parameter:
+                self.play_stream(parameter)
+
+            if command == self.config.get('command', 'play_file') and parameter:
+                path = self.config.get('bot', 'music_folder') + parameter
+                if os.path.isfile(path):
+                    self.launch_play_file(path)
+                else:
+                    self.mumble.users[text.actor].send_message(self.config.get('strings', 'bad_file'))
 
             elif command == self.config.get('command', 'stop'):
                 self.stop()
@@ -118,16 +126,16 @@ class MumbleRadioPlayer:
         else:
             return False
 
-    def play(self, msg):
+    def play_stream(self, msg):
         if self.config.has_option('stream', msg):
             url = self.config.get('stream', msg)
-            self.launch_play(url)
+            self.launch_play_stream(url)
         elif self.config.getboolean('bot', 'allow_new_url') and get_url(msg):
-            self.launch_play(get_url(msg))
+            self.launch_play_stream(get_url(msg))
         else:
             print("Bad input")
 
-    def launch_play(self, url):
+    def launch_play_stream(self, url):
         info = get_server_description(url)
         if info != False:
             self.stop()
@@ -138,18 +146,33 @@ class MumbleRadioPlayer:
             else:
                 ffmpeg_debug = "warning"
             command = ["ffmpeg", '-v', ffmpeg_debug, '-nostdin', '-i', url, '-ac', '1', '-f', 's16le', '-ar', '48000', '-']
+
             self.url = url
             self.thread = sp.Popen(command, stdout=sp.PIPE, bufsize=480)
             self.set_comment("Stream from %s" % info)
             time.sleep(3)
             self.playing = True
 
+    def launch_play_file(self, path):
+        self.stop()
+        if self.config.getboolean('debug', 'ffmpeg'):
+            ffmpeg_debug = "debug"
+        else:
+            ffmpeg_debug = "warning"
+        command = ["ffmpeg", '-v', ffmpeg_debug, '-nostdin', '-i', path, '-ac', '1', '-f', 's16le', '-ar', '48000', '-']
+        self.thread = sp.Popen(command, stdout=sp.PIPE, bufsize=480)
+        self.playing = True
+
     def loop(self):
         while not self.exit:
             if self.playing:
                 while self.mumble.sound_output.get_buffer_size() > 0.5 and self.playing:
                     time.sleep(0.01)
-                self.mumble.sound_output.add_sound(audioop.mul(self.thread.stdout.read(480), 2, self.volume))
+                raw_music = self.thread.stdout.read(480)
+                if raw_music:
+                    self.mumble.sound_output.add_sound(audioop.mul(raw_music, 2, self.volume))
+                else:
+                    time.sleep(0.01)
             else:
                 time.sleep(1)
 
@@ -201,6 +224,8 @@ def get_server_description(url):
         title_server = data['servertitle']
     except urllib.error.HTTPError:
         pass
+
+
     except ValueError:
         return False
 
@@ -210,6 +235,7 @@ def get_server_description(url):
             response = urllib.request.urlopen(request)
             data = json.loads(response.read().decode("utf-8"))
             title_server = data['icestats']['source'][0]['server_name'] + ' - ' + data['icestats']['source'][0]['server_description']
+
             if not title_server:
                 title_server = url
         except urllib.error.URLError:
@@ -222,15 +248,17 @@ def get_server_description(url):
 def get_title(url):
     request = urllib.request.Request(url, headers={'Icy-MetaData': 1})
     try:
+
         response = urllib.request.urlopen(request)
         icy_metaint_header = int(response.headers['icy-metaint'])
         if icy_metaint_header is not None:
             response.read(icy_metaint_header)
+
             metadata_length = struct.unpack('B', response.read(1))[0] * 16  # length byte
             metadata = response.read(metadata_length).rstrip(b'\0')
             print(metadata, file=sys.stderr)
             # extract title from the metadata
-            m = re.search(br"StreamTitle='(.*)';", metadata)
+            m = re.search(br"StreamTitle='([^']*)';", metadata)
             if m:
                 title = m.group(1)
                 if title:

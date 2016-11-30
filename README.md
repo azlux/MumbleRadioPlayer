@@ -25,13 +25,14 @@ Optional parameters :
 -password <password>
 `
 
-It's in Python 3 (maybe it's working for python2, too. No tested!)
+It's in Python 3 (The python2 version is into another branch. depreciated version !)
 
 #### Commands
 You can change commands into the configuration file, The default is :
 - !play
    - from a list of url (name you have add into the configuration file)
    - with a url
+- !playfile (play a file from the path into the config file)
 - !stop
 - !joinme (join the user who speak to me)
 - !kill
