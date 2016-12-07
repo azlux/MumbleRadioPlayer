@@ -13,6 +13,7 @@ import subprocess as sp
 import pymumble.pymumble_py3 as pymumble
 import argparse
 import os.path
+from os import listdir
 
 
 class MumbleRadioPlayer:
@@ -41,7 +42,7 @@ class MumbleRadioPlayer:
         self.mumble = pymumble.Mumble(args.host, user=args.user, port=args.port, password=args.password,
                                       debug=self.config.getboolean('debug', 'mumbleConnection'))
         self.mumble.callbacks.set_callback("text_received", self.message_received)
-        
+
         self.mumble.set_codec_profile("audio")
         self.mumble.start()  # start the mumble thread
         self.mumble.is_ready()  # wait for the connection
@@ -117,6 +118,15 @@ class MumbleRadioPlayer:
                     self.send_msg_channel(get_title(self.url))
                 else:
                     self.mumble.users[text.actor].send_message(self.config.get('strings', 'not_playing'))
+            
+            elif command == self.config.get('command', 'list'):
+                folder_path = self.config.get('bot', 'music_folder')
+                files = [f for f in listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+                if files :
+                    self.mumble.users[text.actor].send_message('<br>'.join(files))
+                else :
+                     self.mumble.users[text.actor].send_message(self.config.get('strings', 'no_file')) 
+
             else:
                 self.mumble.users[text.actor].send_message(self.config.get('strings', 'bad_command'))
 

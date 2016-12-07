@@ -33,6 +33,7 @@ You can change commands into the configuration file, The default is :
    - from a list of url (name you have add into the configuration file)
    - with a url
 - !playfile (play a file from the path into the config file)
+- !list (list all files into the path of !playfile)
 - !stop
 - !joinme (join the user who speak to me)
 - !kill
@@ -80,8 +81,9 @@ The bot change is own comment with the stream name. Now working with:
 
 #### TODO
 - [x] Make the bot speak in the channel
+- [ ] Better comment use (and add !help)
 - [ ] Option to use a certificate
 
 =====
 ### Credits
-Pymumble comes from [here](https://github.com/azlux/pymumble). It's, for now, the current fork alive of pymumble
+Pymumble comes from [here](https://github.com/azlux/pymumble). It's, for now, the current fork alive of pymumble in PYTHON 3 now \o/
