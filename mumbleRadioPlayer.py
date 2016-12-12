@@ -78,7 +78,7 @@ class MumbleRadioPlayer:
             if command == self.config.get('command', 'play_stream') and parameter:
                 self.play_stream(parameter)
 
-            if command == self.config.get('command', 'play_file') and parameter:
+            elif command == self.config.get('command', 'play_file') and parameter:
                 path = self.config.get('bot', 'music_folder') + parameter
                 if "/" in parameter:
                     self.mumble.users[text.actor].send_message(self.config.get('strings', 'bad_file'))
