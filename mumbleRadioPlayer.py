@@ -13,6 +13,7 @@ import subprocess as sp
 import pymumble.pymumble_py3 as pymumble
 import argparse
 import os.path
+import http.client
 from os import listdir
 
 
@@ -236,8 +237,8 @@ def get_server_description(url):
         title_server = data['servertitle']
     except urllib.error.HTTPError:
         pass
-
-
+    except http.client.BadStatusLine:
+        pass
     except ValueError:
         return False
 
@@ -254,6 +255,8 @@ def get_server_description(url):
             title_server = url
         except urllib.error.HTTPError:
             return False
+        except http.client.BadStatusLine:
+            pass
     return title_server
 
 
