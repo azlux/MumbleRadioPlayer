@@ -43,16 +43,15 @@ You can change commands into the configuration file, The default is :
 
 #### Installation
 1. You need python 3 with opuslib and protobuf (look at the requirement of pymumble)
-   (Hint pyenv is a good start to get the requirements, search pyenv-installer)
+you will need pip3 (apt-get install python3-pip)
 2. The Bot use ffmpeg, so you know what you have to do if ffmpeg aren't in your package manager. I personally use [this repository](http://repozytorium.mati75.eu/) on my raspberry.
 
 commands (don't forget the sudo mode):
 ```
-pip install opuslib
-pip install protobuf
 apt-get install ffmpeg
 git clone --recurse-submodules https://github.com/azlux/MumbleRadioPlayer.git
 cd ./MumbleRadioPlayer
+pip3 install -r requirement.txt
 chmod +x ./mumbleRadioPlayer.py
 ```
 
