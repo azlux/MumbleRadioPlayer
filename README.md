@@ -15,14 +15,14 @@ A Mumble bot that plays radio stream by URL
 #### How to start the bot
 Run the mumbleRadioPlayer.py to start the bot (don't forget the `chmod +x ./mumbleRadioPlayer.py`)
 `
-./mumbleRadioPlayer.py -server <server_url> -user <bot_name>
+./mumbleRadioPlayer.py --server <server_url> --user <bot_name>
 `
 
 Optional parameters :
 `
--channel <default_channel>
--port <port_number>
--password <password>
+--channel <default_channel>
+--port <port_number>
+--password <password>
 `
 
 It's in Python 3 (The python2 version is into another branch. depreciated version !)
