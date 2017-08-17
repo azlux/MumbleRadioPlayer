@@ -22,7 +22,7 @@ class MumbleRadioPlayer:
         signal.signal(signal.SIGINT, self.ctrl_caught)
 
         self.config = configparser.ConfigParser(interpolation=None)
-        self.config.read("configuration.ini")
+        self.config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"configuration.ini"))
 
         parser = argparse.ArgumentParser(description='Bot for playing radio stream on Mumble')
         parser.add_argument("-s", "--server", dest="host", type=str, required=True, help="The server's hostame of a mumble server")
