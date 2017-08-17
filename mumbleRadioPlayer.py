@@ -97,7 +97,10 @@ class MumbleRadioPlayer:
                     self.exit = True
                 else:
                     self.mumble.users[text.actor].send_message(self.config.get('strings', 'not_admin'))
-
+                    
+            elif command == self.config.get('command', 'help'):
+                self.mumble.users[text.actor].send_message(self.config.get('strings', 'help'))
+                
             elif command == self.config.get('command', 'stop_and_getout'):
                 self.stop()
                 if self.channel:
