@@ -73,6 +73,7 @@ Because, Yes, You can help.
 
 #### Additionnal informations
 If a command doesn't work, try to find the error, or send me the command and I will try to reproduce it.
+When I upgarde pymumble, the requirement can change. Reinstall the pip3 requirement if you are not sure.
 
 The bot change is own comment with the stream name. Now working with:
 - ShoutCast
@@ -80,7 +81,7 @@ The bot change is own comment with the stream name. Now working with:
 
 #### TODO
 - [x] Make the bot speak in the channel
-- [ ] Better comment use (and add !help)
+- [x] Better comment use (and add !help)
 - [ ] Option to use a certificate
 
 =====
