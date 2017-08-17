@@ -51,7 +51,7 @@ commands (don't forget the sudo mode):
 apt-get install ffmpeg
 git clone --recurse-submodules https://github.com/azlux/MumbleRadioPlayer.git
 cd ./MumbleRadioPlayer
-pip3 install -r requirement.txt
+pip3 install -r requirements.txt
 chmod +x ./mumbleRadioPlayer.py
 ```
 
