@@ -180,7 +180,7 @@ class MumbleRadioPlayer:
         self.playing = True
 
     def loop(self):
-        while not self.exit:
+        while not self.exit and self.mumble.isAlive():
             if self.playing:
                 while self.mumble.sound_output.get_buffer_size() > 0.5 and self.playing:
                     time.sleep(0.01)
