@@ -23,6 +23,7 @@ Optional parameters :
 --channel <default_channel>
 --port <port_number>
 --password <password>
+--cert <certificate>
 `
 
 It's in Python 3 (The python2 version is into another branch. depreciated version !)
@@ -82,7 +83,7 @@ The bot change is own comment with the stream name. Now working with:
 #### TODO
 - [x] Make the bot speak in the channel
 - [x] Better comment use (and add !help)
-- [ ] Option to use a certificate
+- [x] Option to use a certificate
 
 =====
 ### Credits
