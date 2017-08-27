@@ -30,6 +30,7 @@ class MumbleRadioPlayer:
         parser.add_argument("-P", "--password", dest="password", type=str, default="", help="Password if server requires one")
         parser.add_argument("-p", "--port", dest="port", type=int, default=64738, help="Port for the mumble server")
         parser.add_argument("-c", "--channel", dest="channel", type=str, default="", help="Default chanel for the bot")
+        parser.add_argument("-C", "--cert", dest="certificate", type=str, default=None, help="Certificate file")
 
         args = parser.parse_args()
         self.volume = self.config.getfloat('bot', 'volume')
@@ -41,7 +42,7 @@ class MumbleRadioPlayer:
         self.thread = None
 
         self.mumble = pymumble.Mumble(args.host, user=args.user, port=args.port, password=args.password,
-                                      debug=self.config.getboolean('debug', 'mumbleConnection'))
+                                      debug=self.config.getboolean('debug', 'mumbleConnection'), certfile=args.certificate)
         self.mumble.callbacks.set_callback("text_received", self.message_received)
 
         self.mumble.set_codec_profile("audio")
