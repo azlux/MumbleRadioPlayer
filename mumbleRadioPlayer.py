@@ -251,7 +251,10 @@ def get_server_description(url):
             request = urllib.request.Request(url_icecast)
             response = urllib.request.urlopen(request)
             data = json.loads(response.read().decode("utf-8"))
-            title_server = data['icestats']['source'][0]['server_name'] + ' - ' + data['icestats']['source'][0]['server_description']
+            try:
+                title_server = data['icestats']['source'][0]['server_name'] + ' - ' + data['icestats']['source'][0]['server_description']
+            except KeyError:
+                title_server = data['icestats']['source']['server_name'] + ' - ' + data['icestats']['source']['server_description']
 
             if not title_server:
                 title_server = url
