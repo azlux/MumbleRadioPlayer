@@ -260,8 +260,6 @@ def get_server_description(url):
                 title_server = url
         except urllib.error.URLError:
             title_server = url
-        except urllib.error.HTTPError:
-            return False
         except http.client.BadStatusLine:
             pass
     return title_server
