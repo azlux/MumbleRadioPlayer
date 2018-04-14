@@ -24,12 +24,12 @@ class MumbleRadioPlayer:
         self.config = configparser.ConfigParser(interpolation=None)
         self.config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"configuration.ini"))
 
-        parser = argparse.ArgumentParser(description='Bot for playing radio stream on Mumble')
-        parser.add_argument("-s", "--server", dest="host", type=str, required=True, help="The server's hostame of a mumble server")
-        parser.add_argument("-u", "--user", dest="user", type=str, required=True, help="Username you wish, Default=abot")
-        parser.add_argument("-P", "--password", dest="password", type=str, default="", help="Password if server requires one")
-        parser.add_argument("-p", "--port", dest="port", type=int, default=64738, help="Port for the mumble server")
-        parser.add_argument("-c", "--channel", dest="channel", type=str, default="", help="Default chanel for the bot")
+        parser = argparse.ArgumentParser(description='Bot for playing radio streams on Mumble')
+        parser.add_argument("-s", "--server", dest="host", type=str, required=True, help="Hostname of the Mumble server")
+        parser.add_argument("-u", "--user", dest="user", type=str, required=True, help="Username for the bot, Default=abot")
+        parser.add_argument("-P", "--password", dest="password", type=str, default="", help="Server password, if required")
+        parser.add_argument("-p", "--port", dest="port", type=int, default=64738, help="Port for the Mumble server")
+        parser.add_argument("-c", "--channel", dest="channel", type=str, default="", help="Default channel for the bot")
         parser.add_argument("-C", "--cert", dest="certificate", type=str, default=None, help="Certificate file")
 
         args = parser.parse_args()
@@ -49,14 +49,14 @@ class MumbleRadioPlayer:
         self.mumble.start()  # start the mumble thread
         self.mumble.is_ready()  # wait for the connection
         self.set_comment()
-        self.mumble.users.myself.unmute()  # by sure the user is not muted
+        self.mumble.users.myself.unmute()  # be sure the bot is not muted
         if self.channel:
             self.mumble.channels.find_by_name(self.channel).move_in()
         self.mumble.set_bandwidth(200000)
         self.loop()
 
     def ctrl_caught(self, signal, frame):
-        print("\ndeconnection asked")
+        print("\nSIGINT caught, quitting")
         self.exit = True
         self.stop()
         if self.nb_exit > 2:
@@ -251,14 +251,15 @@ def get_server_description(url):
             request = urllib.request.Request(url_icecast)
             response = urllib.request.urlopen(request)
             data = json.loads(response.read().decode("utf-8"))
-            title_server = data['icestats']['source'][0]['server_name'] + ' - ' + data['icestats']['source'][0]['server_description']
+            try:
+                title_server = data['icestats']['source'][0]['server_name'] + ' - ' + data['icestats']['source'][0]['server_description']
+            except KeyError:
+                title_server = data['icestats']['source']['server_name'] + ' - ' + data['icestats']['source']['server_description']
 
             if not title_server:
                 title_server = url
         except urllib.error.URLError:
             title_server = url
-        except urllib.error.HTTPError:
-            return False
         except http.client.BadStatusLine:
             pass
     return title_server
@@ -284,7 +285,7 @@ def get_title(url):
                     return title
     except (urllib.error.URLError, urllib.error.HTTPError):
         pass
-    return 'Impossible to get the music title'
+    return 'Failed to get the stream title'
 
 
 if __name__ == '__main__':
