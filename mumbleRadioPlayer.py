@@ -15,6 +15,7 @@ import argparse
 import os.path
 import http.client
 from os import listdir
+import logging
 
 
 class MumbleRadioPlayer:
@@ -31,6 +32,7 @@ class MumbleRadioPlayer:
         parser.add_argument("-p", "--port", dest="port", type=int, default=64738, help="Port for the Mumble server")
         parser.add_argument("-c", "--channel", dest="channel", type=str, default="", help="Default channel for the bot")
         parser.add_argument("-C", "--cert", dest="certificate", type=str, default=None, help="Certificate file")
+        parser.add_argument("-q", "--quiet", dest="quiet", action="store_true", help="Log are quiet")
 
         args = parser.parse_args()
         self.volume = self.config.getfloat('bot', 'volume')
@@ -40,6 +42,12 @@ class MumbleRadioPlayer:
         self.exit = False
         self.nb_exit = 0
         self.thread = None
+        
+        FORMAT='%(asctime)s: %(message)s'
+        if args.quiet:
+            logging.basicConfig(format=FORMAT,level=logging.ERROR,datefmt='%Y-%m-%d %H:%M:%S')
+        else:
+            logging.basicConfig(format=FORMAT,level=logging.DEBUG,datefmt='%Y-%m-%d %H:%M:%S')
 
         self.mumble = pymumble.Mumble(args.host, user=args.user, port=args.port, password=args.password,
                                       debug=self.config.getboolean('debug', 'mumbleConnection'), certfile=args.certificate)
@@ -56,11 +64,11 @@ class MumbleRadioPlayer:
         self.loop()
 
     def ctrl_caught(self, signal, frame):
-        print("\nSIGINT caught, quitting")
+        logging.info("\nSIGINT caught, quitting")
         self.exit = True
         self.stop()
         if self.nb_exit > 2:
-            print("Forced Quit")
+            logging.info("Forced Quit")
             sys.exit(0)
         self.nb_exit += 1
 
@@ -76,7 +84,7 @@ class MumbleRadioPlayer:
             else:
                 return
 
-            print(command + ' - ' + parameter + ' by ' + self.mumble.users[text.actor]['name'])
+            logging.info(command + ' - ' + parameter + ' by ' + self.mumble.users[text.actor]['name'])
             if command == self.config.get('command', 'play_stream') and parameter:
                 self.play_stream(parameter)
 
@@ -150,7 +158,7 @@ class MumbleRadioPlayer:
         elif self.config.getboolean('bot', 'allow_new_url') and get_url(msg):
             self.launch_play_stream(get_url(msg))
         else:
-            print("Bad input")
+            logging.info("Bad input")
 
     def launch_play_stream(self, url):
         info = get_server_description(url)
@@ -239,6 +247,8 @@ def get_server_description(url):
         response = urllib.request.urlopen(request)
         data = json.loads(response.read().decode("utf-8"))
         title_server = data['servertitle']
+        logging.info("TITLE FOUND SHOUTCAST: " + title_server)
+        
     except urllib.error.HTTPError:
         pass
     except http.client.BadStatusLine:
@@ -258,6 +268,7 @@ def get_server_description(url):
 
             if not title_server:
                 title_server = url
+            logging.info("TITLE FOUND ICECAST: " + title_server)
         except urllib.error.URLError:
             title_server = url
         except http.client.BadStatusLine:
@@ -276,7 +287,7 @@ def get_title(url):
 
             metadata_length = struct.unpack('B', response.read(1))[0] * 16  # length byte
             metadata = response.read(metadata_length).rstrip(b'\0')
-            print(metadata, file=sys.stderr)
+            logging.info(metadata)
             # extract title from the metadata
             m = re.search(br"StreamTitle='([^']*)';", metadata)
             if m:
