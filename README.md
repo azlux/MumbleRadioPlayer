@@ -1,5 +1,8 @@
 # MumbleRadioPlayer
-A Mumble bot that plays radio stream by URL
+A **DEPRECATED** Mumble bot that plays radio stream by URL
+
+# I've merge multiple project into [botamusique](https://github.com/azlux/botamusique)
+## I will not update MumbleRadioPlayer ANYMORE
 
 ======
 
